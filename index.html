@@ -70,8 +70,11 @@
       <label for="recipient">Merchant Address:</label>
       <input type="text" id="recipient" placeholder="0xMerchantAddress" style="width:100%;padding:8px;margin-bottom:10px;">
 
-      <label for="amount">Amount (SHISO):</label>
-      <input type="number" id="amount" placeholder="e.g., 10" style="width:100%;padding:8px;margin-bottom:10px;">
+      <label for="usdAmount">Product Price (USD):</label>
+      <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
+
+      <p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
+      <p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
 
       <button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
       <button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
@@ -110,28 +113,44 @@
     <p>© 2025 ShisoPay | Built for Merchants & the Crypto Community</p>
   </footer>
 
-  <!-- Ethers.js for SHISO Token Transfers -->
+  <!-- Ethers.js + CoinGecko -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.1/dist/ethers.min.js"></script>
   <script>
     const connectBtn = document.getElementById("connectWalletBtn");
     const sendBtn = document.getElementById("sendBtn");
     const statusEl = document.getElementById("status");
+    const usdInput = document.getElementById("usdAmount");
+    const shisoPriceEl = document.getElementById("shisoPrice");
+    const shisoAmountEl = document.getElementById("shisoAmount");
 
-    let provider;
-    let signer;
-    let userAddress;
+    let provider, signer, userAddress;
+    let shisoPrice = 0;
 
-    // Replace with your SHISO token contract address (BSC testnet for demo)
     const shisoTokenAddress = "0xYourTestnetSHISOToken"; 
-    const shisoAbi = [
-      "function transfer(address to, uint amount) public returns (bool)"
-    ];
+    const shisoAbi = ["function transfer(address to, uint amount) public returns (bool)"];
+
+    async function fetchShisoPrice() {
+      try {
+        const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=shiso&vs_currencies=usd");
+        const data = await response.json();
+        shisoPrice = data.shiso.usd;
+        shisoPriceEl.innerText = shisoPrice.toFixed(4);
+        calculateShisoAmount();
+      } catch (err) {
+        console.error("Error fetching price:", err);
+      }
+    }
+
+    function calculateShisoAmount() {
+      const usd = parseFloat(usdInput.value);
+      const amount = usd / shisoPrice || 0;
+      shisoAmountEl.innerText = amount.toFixed(4);
+    }
+
+    usdInput.addEventListener("input", calculateShisoAmount);
 
     connectBtn.addEventListener("click", async () => {
-      if (!window.ethereum) {
-        alert("MetaMask not detected! Please install it.");
-        return;
-      }
+      if (!window.ethereum) { alert("Install MetaMask!"); return; }
       try {
         await window.ethereum.request({ method: "eth_requestAccounts" });
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -140,7 +159,7 @@
         connectBtn.innerText = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
         connectBtn.disabled = true;
         sendBtn.disabled = false;
-        statusEl.innerText = "Wallet connected! You can now send SHISO tokens.";
+        statusEl.innerText = "Wallet connected! Ready to send SHISO.";
       } catch (err) {
         console.error(err);
         statusEl.innerText = "Connection failed!";
@@ -149,19 +168,13 @@
 
     sendBtn.addEventListener("click", async () => {
       const recipient = document.getElementById("recipient").value.trim();
-      const amount = document.getElementById("amount").value.trim();
-
-      if (!recipient || !amount) {
-        alert("Please enter both recipient address and amount.");
-        return;
-      }
+      const amount = parseFloat(shisoAmountEl.innerText);
+      if (!recipient || amount <= 0) { alert("Enter valid recipient and amount."); return; }
 
       try {
         const contract = new ethers.Contract(shisoTokenAddress, shisoAbi, signer);
-        const decimals = 18;
-        const amountWei = ethers.parseUnits(amount, decimals);
+        const amountWei = ethers.parseUnits(amount.toString(), 18);
         statusEl.innerText = "Sending transaction...";
-
         const tx = await contract.transfer(recipient, amountWei);
         statusEl.innerText = `Transaction sent! Hash: ${tx.hash}`;
         await tx.wait();
@@ -171,6 +184,8 @@
         statusEl.innerText = "Transaction failed. Check console.";
       }
     });
+
+    fetchShisoPrice();
   </script>
 </body>
 </html>
