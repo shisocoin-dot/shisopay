@@ -26,41 +26,6 @@
     <a href="#community">Community</a>
   </nav>
 
-  <!-- About Section -->
-  <section id="about">
-    <h2>📖 About ShisoPay</h2>
-    <p>ShisoPay is a decentralized crypto payment gateway built for merchants and businesses to accept SHISO and other cryptocurrency payments securely and instantly. 
-       By leveraging blockchain technology, ShisoPay ensures fast, transparent, and low-fee transactions worldwide.</p>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
-
-  <!-- Features Section -->
-  <section id="features">
-    <h2>✨ Key Features</h2>
-    <ul>
-      <li>⚡ Instant crypto payments with minimal fees.</li>
-      <li>🔒 Secure and transparent blockchain transactions.</li>
-      <li>🌐 Supports SHISO and multiple partner tokens.</li>
-      <li>📊 Merchant dashboard with transaction history and analytics.</li>
-      <li>💻 Easy integration with websites, e-commerce platforms, and POS systems.</li>
-      <li>🎁 Loyalty and reward programs for customers.</li>
-    </ul>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
-
-  <!-- How it Works Section -->
-  <section id="howto">
-    <h2>⚙️ How ShisoPay Works</h2>
-    <ol>
-      <li>Merchants register on the ShisoPay platform and receive a unique payment ID.</li>
-      <li>Integrate ShisoPay checkout button or API on your website or store.</li>
-      <li>Customers choose crypto payment and scan QR code or use wallet link.</li>
-      <li>Transaction is verified on blockchain and merchant receives instant payment.</li>
-      <li>All payments are recorded in the merchant dashboard for tracking and accounting.</li>
-    </ol>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
-
   <!-- ShisoPay Demo Section -->
   <section id="shisopay-demo">
     <h2>💳 ShisoPay Demo</h2>
@@ -81,30 +46,6 @@
 
       <p id="status" style="margin-top:10px;color:#2575fc;"></p>
     </div>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
-
-  <!-- Contact Section -->
-  <section id="contact">
-    <h2>📬 Contact Us</h2>
-    <p>For partnership, integration, or support inquiries, reach out:</p>
-    <p>
-      <strong>Email:</strong> <a href="mailto:support@shisopay.com">support@shisopay.com</a><br>
-      <strong>Telegram:</strong> <a href="#" target="_blank">ShisoPay Telegram</a><br>
-      <strong>Twitter:</strong> <a href="#" target="_blank">ShisoPay Twitter</a>
-    </p>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
-
-  <!-- Community Section -->
-  <section id="community">
-    <h2>🌐 Community</h2>
-    <p>Join our global ShisoPay community for updates and discussions:</p>
-    <p>
-      <a href="#" target="_blank">Telegram</a> |
-      <a href="#" target="_blank">Twitter</a> |
-      <a href="#" target="_blank">Discord</a>
-    </p>
     <a class="back-btn" href="#top">⬆ Back to Menu</a>
   </section>
 
@@ -129,6 +70,7 @@
     const shisoTokenAddress = "0xYourTestnetSHISOToken"; 
     const shisoAbi = ["function transfer(address to, uint amount) public returns (bool)"];
 
+    // Fetch SHISO price in USD from CoinGecko
     async function fetchShisoPrice() {
       try {
         const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=shiso&vs_currencies=usd");
@@ -138,12 +80,13 @@
         calculateShisoAmount();
       } catch (err) {
         console.error("Error fetching price:", err);
+        shisoPriceEl.innerText = "0";
       }
     }
 
     function calculateShisoAmount() {
-      const usd = parseFloat(usdInput.value);
-      const amount = usd / shisoPrice || 0;
+      const usd = parseFloat(usdInput.value) || 0;
+      const amount = shisoPrice > 0 ? usd / shisoPrice : 0;
       shisoAmountEl.innerText = amount.toFixed(4);
     }
 
@@ -185,7 +128,7 @@
       }
     });
 
-    fetchShisoPrice();
+    fetchShisoPrice(); // fetch price on load
   </script>
 </body>
 </html>
