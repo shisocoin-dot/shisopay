@@ -27,193 +27,182 @@
     <a href="#community">Community</a>
   </nav>
 
-<!-- ShisoPay Demo Section -->
-<section id="shisopay-demo">
-  <h2>💳 ShisoPay Demo</h2>
-  <p>Send SHISO tokens to a merchant address directly from your wallet.</p>
+  <!-- ShisoPay Demo Section -->
+  <section id="shisopay-demo">
+    <h2>💳 ShisoPay Demo</h2>
+    <p>Send SHISO tokens to a merchant address directly from your wallet.</p>
 
-  <div style="max-width:500px;margin:auto;text-align:left;">
-    <label for="recipient">Merchant Address:</label>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <input type="text" id="recipient" placeholder="0xMerchantAddress" style="flex:1;padding:8px;">
-      <button id="scanQRBtn" class="btn" style="padding:8px 12px;">📷 Scan</button>
+    <div style="max-width:500px;margin:auto;text-align:left;">
+      <label for="recipient">Merchant Address:</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="recipient" placeholder="0xMerchantAddress" style="flex:1;padding:8px;">
+        <button id="scanQRBtn" class="btn" style="padding:8px 12px;">📷 Scan</button>
+      </div>
+
+      <!-- QR Scanner Area (hidden until user clicks Scan) -->
+      <div id="qr-scanner-container" style="display:none;margin-top:10px;text-align:center;">
+        <div id="qr-reader" style="width:100%;"></div>
+        <button id="closeScannerBtn" class="btn" style="margin-top:8px;">Close Scanner</button>
+      </div>
+
+      <label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
+      <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
+
+      <p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
+      <p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
+
+      <button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
+      <button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
+
+      <p id="status" style="margin-top:10px;color:#2575fc;"></p>
     </div>
+    <a class="back-btn" href="#top">⬆ Back to Menu</a>
+  </section>
 
-<!-- QR Scanner Area (hidden until user clicks Scan) -->
-<div id="qr-scanner-container" style="display:none;margin-top:10px;text-align:center;">
-  <div id="qr-reader" style="width:100%;"></div>
-  <button id="closeScannerBtn" class="btn" style="margin-top:8px;">Close Scanner</button>
-</div>
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 ShisoPay | Built for Merchants & the Crypto Community</p>
+  </footer>
 
-    <label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
-    <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
+  <!-- Ethers.js + HTML5 QR Code Scanner -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
-    <p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
-    <p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
+  <script>
+    const connectBtn = document.getElementById("connectWalletBtn");
+    const sendBtn = document.getElementById("sendBtn");
+    const statusEl = document.getElementById("status");
+    const usdInput = document.getElementById("usdAmount");
+    const shisoPriceEl = document.getElementById("shisoPrice");
+    const shisoAmountEl = document.getElementById("shisoAmount");
+    const scanBtn = document.getElementById("scanQRBtn");
+    const qrContainer = document.getElementById("qr-scanner-container");
+    const closeScannerBtn = document.getElementById("closeScannerBtn");
+    const recipientInput = document.getElementById("recipient");
 
-    <button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
-    <button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
+    let provider, signer, userAddress;
+    let shisoPrice = 0;
+    let html5QrCodeInstance = null;
 
-    <p id="status" style="margin-top:10px;color:#2575fc;"></p>
-  </div>
-  <a class="back-btn" href="#top">⬆ Back to Menu</a>
-</section>
+    // ✅ Replace with your actual deployed SHISO token address
+    const shisoTokenAddress = "0xYourTestnetSHISOToken"; 
+    const shisoAbi = ["function transfer(address to, uint amount) public returns (bool)"];
 
-<!-- Footer -->
-<footer>
-  <p>© 2025 ShisoPay | Built for Merchants & the Crypto Community</p>
-</footer>
-
-<!-- Ethers.js + HTML5 QR Code Scanner -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-
-<script>
-  const connectBtn = document.getElementById("connectWalletBtn");
-  const sendBtn = document.getElementById("sendBtn");
-  const statusEl = document.getElementById("status");
-  const usdInput = document.getElementById("usdAmount");
-  const shisoPriceEl = document.getElementById("shisoPrice");
-  const shisoAmountEl = document.getElementById("shisoAmount");
-  const scanBtn = document.getElementById("scanQRBtn");
-  const qrContainer = document.getElementById("qr-scanner-container");
-  const closeScannerBtn = document.getElementById("closeScannerBtn");
-  const recipientInput = document.getElementById("recipient");
-
-  let provider, signer, userAddress;
-  let shisoPrice = 0;
-  let html5QrCode;
-
-  // ✅ Replace with your actual deployed SHISO token address
-  const shisoTokenAddress = "0xYourTestnetSHISOToken"; 
-  const shisoAbi = ["function transfer(address to, uint amount) public returns (bool)"];
-
-  // ✅ Fetch SHISO price in USD from GeckoTerminal
-  async function fetchShisoPrice() {
-    try {
-      const response = await fetch("https://api.geckoterminal.com/api/v2/networks/bsc/pools/0x475b925367f1451b2091a7cae0262f867c9b9f55");
-      const data = await response.json();
-
-      shisoPrice = parseFloat(data.data.attributes.base_token_price_usd);
-      shisoPriceEl.innerText = shisoPrice.toFixed(6);
-      calculateShisoAmount();
-    } catch (err) {
-      console.error("Error fetching price:", err);
-      shisoPriceEl.innerText = "0";
-    }
-  }
-
-  // Calculate SHISO token amount for entered USD
-  function calculateShisoAmount() {
-    const usd = parseFloat(usdInput.value) || 0;
-    const amount = shisoPrice > 0 ? usd / shisoPrice : 0;
-    shisoAmountEl.innerText = amount.toFixed(4);
-  }
-
-  usdInput.addEventListener("input", calculateShisoAmount);
-
-  // Connect MetaMask Wallet
-  connectBtn.addEventListener("click", async () => {
-    if (!window.ethereum) { alert("Please install MetaMask!"); return; }
-    try {
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
-      userAddress = await signer.getAddress();
-
-      connectBtn.innerText = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-      connectBtn.disabled = true;
-      sendBtn.disabled = false;
-      statusEl.innerText = "✅ Wallet connected! Ready to send SHISO.";
-    } catch (err) {
-      console.error(err);
-      statusEl.innerText = "❌ Wallet connection failed!";
-    }
-  });
-
-  // Send SHISO Tokens
-  sendBtn.addEventListener("click", async () => {
-    const recipient = recipientInput.value.trim();
-    const amount = parseFloat(shisoAmountEl.innerText);
-    if (!recipient || amount <= 0) { alert("Enter a valid recipient and amount."); return; }
-
-    try {
-      const contract = new ethers.Contract(shisoTokenAddress, shisoAbi, signer);
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
-
-      statusEl.innerText = "⏳ Sending transaction...";
-      const tx = await contract.transfer(recipient, amountWei);
-      statusEl.innerHTML = `📤 Transaction sent! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
-      await tx.wait();
-      statusEl.innerHTML = `✅ Transaction confirmed! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
-    } catch (err) {
-      console.error(err);
-      statusEl.innerText = "❌ Transaction failed. Check console.";
-    }
-  });
-
-// ----------------------
-// QR SCANNER (FIXED)
-// ----------------------
-let html5QrCodeInstance = null;
-
-scanBtn.addEventListener("click", async () => {
-  // Show scanner container
-  qrContainer.style.display = "block";
-
-  // Stop any previous instance (just in case)
-  if (html5QrCodeInstance) {
-    try { await html5QrCodeInstance.stop(); } catch (e) {}
-    html5QrCodeInstance = null;
-  }
-
-  // Create a new instance
-  html5QrCodeInstance = new Html5Qrcode("qr-reader");
-
-  try {
-    await html5QrCodeInstance.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      (decodedText) => {
-        // Fill the scanned address
-        recipientInput.value = decodedText.trim();
-
-        // Stop and close the scanner automatically
-        html5QrCodeInstance.stop().then(() => {
-          qrContainer.style.display = "none";
-          html5QrCodeInstance = null;
-        }).catch(err => console.error("Stop error:", err));
-      },
-      (errorMessage) => {
-        // Ignore scan errors
+    // Fetch SHISO price in USD
+    async function fetchShisoPrice() {
+      try {
+        const response = await fetch("https://api.geckoterminal.com/api/v2/networks/bsc/pools/0x475b925367f1451b2091a7cae0262f867c9b9f55");
+        const data = await response.json();
+        shisoPrice = parseFloat(data.data.attributes.base_token_price_usd);
+        shisoPriceEl.innerText = shisoPrice.toFixed(6);
+        calculateShisoAmount();
+      } catch (err) {
+        console.error("Error fetching price:", err);
+        shisoPriceEl.innerText = "0";
       }
-    );
-  } catch (err) {
-    console.error("Camera start error:", err);
-    qrContainer.style.display = "none";
-  }
-});
-
-// Manual Close Button
-closeScannerBtn.addEventListener("click", async () => {
-  if (html5QrCodeInstance) {
-    try {
-      await html5QrCodeInstance.stop();
-      html5QrCodeInstance.clear();
-      html5QrCodeInstance = null;
-    } catch (err) {
-      console.error("Error closing scanner:", err);
     }
-  }
-  qrContainer.style.display = "none";
-});
 
+    function calculateShisoAmount() {
+      const usd = parseFloat(usdInput.value) || 0;
+      const amount = shisoPrice > 0 ? usd / shisoPrice : 0;
+      shisoAmountEl.innerText = amount.toFixed(4);
+    }
 
-  // Initial price fetch
-  fetchShisoPrice();
-  // Auto-refresh every 60 seconds
-  setInterval(fetchShisoPrice, 60000);
-</script>
+    usdInput.addEventListener("input", calculateShisoAmount);
+
+    // Connect MetaMask Wallet
+    connectBtn.addEventListener("click", async () => {
+      if (!window.ethereum) { alert("Please install MetaMask!"); return; }
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        connectBtn.innerText = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
+        connectBtn.disabled = true;
+        sendBtn.disabled = false;
+        statusEl.innerText = "✅ Wallet connected! Ready to send SHISO.";
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = "❌ Wallet connection failed!";
+      }
+    });
+
+    // Send SHISO Tokens
+    sendBtn.addEventListener("click", async () => {
+      const recipient = recipientInput.value.trim();
+      const amount = parseFloat(shisoAmountEl.innerText);
+      if (!recipient || amount <= 0) { alert("Enter a valid recipient and amount."); return; }
+
+      try {
+        const contract = new ethers.Contract(shisoTokenAddress, shisoAbi, signer);
+        const amountWei = ethers.parseUnits(amount.toString(), 18);
+
+        statusEl.innerText = "⏳ Sending transaction...";
+        const tx = await contract.transfer(recipient, amountWei);
+        statusEl.innerHTML = `📤 Transaction sent! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
+        await tx.wait();
+        statusEl.innerHTML = `✅ Transaction confirmed! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = "❌ Transaction failed. Check console.";
+      }
+    });
+
+    // ----------------------
+    // QR SCANNER LOGIC
+    // ----------------------
+    scanBtn.addEventListener("click", async () => {
+      qrContainer.style.display = "block";
+
+      // Stop previous instance if exists
+      if (html5QrCodeInstance) {
+        try { await html5QrCodeInstance.stop(); html5QrCodeInstance.clear(); } catch(e) {}
+        html5QrCodeInstance = null;
+      }
+
+      html5QrCodeInstance = new Html5Qrcode("qr-reader");
+
+      try {
+        await html5QrCodeInstance.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          async (decodedText) => {
+            recipientInput.value = decodedText.trim();
+
+            // Stop and clear scanner
+            try {
+              await html5QrCodeInstance.stop();
+              html5QrCodeInstance.clear();
+            } catch(err) { console.error("Stop error:", err); }
+
+            html5QrCodeInstance = null;
+            qrContainer.style.display = "none";
+          },
+          (errorMessage) => { /* ignore scan errors */ }
+        );
+      } catch(err) {
+        console.error("Camera start failed:", err);
+        qrContainer.style.display = "none";
+      }
+    });
+
+    closeScannerBtn.addEventListener("click", async () => {
+      if (html5QrCodeInstance) {
+        try {
+          await html5QrCodeInstance.stop();
+          html5QrCodeInstance.clear();
+          html5QrCodeInstance = null;
+        } catch(err) { console.error("Error closing scanner:", err); }
+      }
+      qrContainer.style.display = "none";
+    });
+
+    // Initial price fetch
+    fetchShisoPrice();
+    setInterval(fetchShisoPrice, 60000);
+  </script>
 
 </body>
 </html>
