@@ -39,25 +39,27 @@
         <button id="scanQRBtn" class="btn" style="padding:8px 12px;">📷 Scan</button>
       </div>
 
-      <!-- QR Scanner Area (hidden until user clicks Scan) -->
-      <div id="qr-scanner-container" style="display:none;margin-top:10px;text-align:center;">
-        <div id="qr-reader" style="width:100%;"></div>
-        <button id="closeScannerBtn" class="btn" style="margin-top:8px;">Close Scanner</button>
-      </div>
+<!-- QR Scanner Area (hidden until user clicks Scan) -->
+<div id="qr-scanner-container">
+  <div id="qr-scanner-box">
+    <div id="qr-reader"></div>
+    <button id="closeScannerBtn" class="btn">Close Scanner</button>
+  </div>
+</div>
 
-      <label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
-      <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
+<label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
+<input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
 
-      <p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
-      <p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
+<p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
+<p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
 
-      <button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
-      <button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
+<button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
+<button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
 
-      <p id="status" style="margin-top:10px;color:#2575fc;"></p>
-    </div>
-    <a class="back-btn" href="#top">⬆ Back to Menu</a>
-  </section>
+<p id="status" style="margin-top:10px;color:#2575fc;"></p>
+</div>
+<a class="back-btn" href="#top">⬆ Back to Menu</a>
+ </section>
 
   <!-- Footer -->
   <footer>
