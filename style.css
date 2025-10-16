@@ -46,6 +46,9 @@ header p {
   border-radius: 6px;
   font-weight: bold;
   box-shadow: 0 4px 10px rgba(37, 117, 252, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .btn:hover {
@@ -126,6 +129,57 @@ footer {
   font-size: 0.9em;
 }
 
+/* ---------- QR Scanner Modal ---------- */
+#qr-scanner-container {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+
+#qr-scanner-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.4s ease;
+  text-align: center;
+}
+
+#qr-video {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+#closeScannerBtn {
+  margin-top: 10px;
+  background: #6a11cb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#closeScannerBtn:hover {
+  background: #2575fc;
+}
+
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   section {
@@ -139,5 +193,8 @@ footer {
   nav.menu a {
     margin: 10px 0;
   }
-}
 
+  #qr-scanner-box {
+    width: 95%;
+  }
+}
