@@ -69,11 +69,12 @@
     <p>© 2025 ShisoPay | Built for Merchants & the Crypto Community</p>
   </footer>
 
-  <!-- Ethers.js + HTML5 QR Code Scanner -->
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<!-- Ethers.js + HTML5 QR Code Scanner -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
-  <script>
+<script>
+window.addEventListener("load", () => {
     const connectBtn = document.getElementById("connectWalletBtn");
     const sendBtn = document.getElementById("sendBtn");
     const statusEl = document.getElementById("status");
@@ -94,130 +95,132 @@
 
     // Fetch SHISO price in USD
     async function fetchShisoPrice() {
-      try {
-        const response = await fetch("https://api.geckoterminal.com/api/v2/networks/bsc/pools/0x475b925367f1451b2091a7cae0262f867c9b9f55");
-        const data = await response.json();
-        shisoPrice = parseFloat(data.data.attributes.base_token_price_usd);
-        shisoPriceEl.innerText = shisoPrice.toFixed(6);
-        calculateShisoAmount();
-      } catch (err) {
-        console.error("Error fetching price:", err);
-        shisoPriceEl.innerText = "0";
-      }
+        try {
+            const response = await fetch("https://api.geckoterminal.com/api/v2/networks/bsc/pools/0x475b925367f1451b2091a7cae0262f867c9b9f55");
+            const data = await response.json();
+            shisoPrice = parseFloat(data.data.attributes.base_token_price_usd);
+            shisoPriceEl.innerText = shisoPrice.toFixed(6);
+            calculateShisoAmount();
+        } catch (err) {
+            console.error("Error fetching price:", err);
+            shisoPriceEl.innerText = "0";
+        }
     }
 
     function calculateShisoAmount() {
-      const usd = parseFloat(usdInput.value) || 0;
-      const amount = shisoPrice > 0 ? usd / shisoPrice : 0;
-      shisoAmountEl.innerText = amount.toFixed(4);
+        const usd = parseFloat(usdInput.value) || 0;
+        const amount = shisoPrice > 0 ? usd / shisoPrice : 0;
+        shisoAmountEl.innerText = amount.toFixed(4);
     }
 
     usdInput.addEventListener("input", calculateShisoAmount);
 
     // Connect MetaMask Wallet
     connectBtn.addEventListener("click", async () => {
-      if (!window.ethereum) { alert("Please install MetaMask!"); return; }
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        provider = new ethers.BrowserProvider(window.ethereum);
-        signer = await provider.getSigner();
-        userAddress = await signer.getAddress();
+        if (!window.ethereum) { alert("Please install MetaMask!"); return; }
+        try {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+            userAddress = await signer.getAddress();
 
-        connectBtn.innerText = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-        connectBtn.disabled = true;
-        sendBtn.disabled = false;
-        statusEl.innerText = "✅ Wallet connected! Ready to send SHISO.";
-      } catch (err) {
-        console.error(err);
-        statusEl.innerText = "❌ Wallet connection failed!";
-      }
+            connectBtn.innerText = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
+            connectBtn.disabled = true;
+            sendBtn.disabled = false;
+            statusEl.innerText = "✅ Wallet connected! Ready to send SHISO.";
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "❌ Wallet connection failed!";
+        }
     });
 
     // Send SHISO Tokens
     sendBtn.addEventListener("click", async () => {
-      const recipient = recipientInput.value.trim();
-      const amount = parseFloat(shisoAmountEl.innerText);
-      if (!recipient || amount <= 0) { alert("Enter a valid recipient and amount."); return; }
+        const recipient = recipientInput.value.trim();
+        const amount = parseFloat(shisoAmountEl.innerText);
+        if (!recipient || amount <= 0) { alert("Enter a valid recipient and amount."); return; }
 
-      try {
-        const contract = new ethers.Contract(shisoTokenAddress, shisoAbi, signer);
-        const amountWei = ethers.parseUnits(amount.toString(), 18);
+        try {
+            const contract = new ethers.Contract(shisoTokenAddress, shisoAbi, signer);
+            const amountWei = ethers.parseUnits(amount.toString(), 18);
 
-        statusEl.innerText = "⏳ Sending transaction...";
-        const tx = await contract.transfer(recipient, amountWei);
-        statusEl.innerHTML = `📤 Transaction sent! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
-        await tx.wait();
-        statusEl.innerHTML = `✅ Transaction confirmed! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
-      } catch (err) {
-        console.error(err);
-        statusEl.innerText = "❌ Transaction failed. Check console.";
-      }
+            statusEl.innerText = "⏳ Sending transaction...";
+            const tx = await contract.transfer(recipient, amountWei);
+            statusEl.innerHTML = `📤 Transaction sent! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
+            await tx.wait();
+            statusEl.innerHTML = `✅ Transaction confirmed! <a href="https://bscscan.com/tx/${tx.hash}" target="_blank">View on BscScan</a>`;
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "❌ Transaction failed. Check console.";
+        }
     });
 
     // ----------------------
     // QR SCANNER LOGIC
     // ----------------------
     scanBtn.addEventListener("click", async () => {
-      qrContainer.style.display = "flex";
+        qrContainer.style.display = "flex";
 
-      if (html5QrCodeInstance) {
-        try { await html5QrCodeInstance.stop(); html5QrCodeInstance.clear(); } catch(e) {}
-        html5QrCodeInstance = null;
-      }
-
-      html5QrCodeInstance = new Html5Qrcode("qr-reader");
-
-      // Try accessing environment camera first
-      Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length) {
-          const cameraId = cameras[0].id; // use back camera
-          html5QrCodeInstance.start(
-            cameraId,
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            decodedText => {
-              recipientInput.value = decodedText.trim();
-              html5QrCodeInstance.stop().then(() => html5QrCodeInstance.clear());
-              html5QrCodeInstance = null;
-              qrContainer.style.display = "none";
-            },
-            errorMessage => { /* ignore scan errors */ }
-          ).catch(err => {
-            console.error("QR start error:", err);
-            qrContainer.style.display = "none";
-          });
-        } else {
-          alert("No camera found on this device.");
-          qrContainer.style.display = "none";
+        if (html5QrCodeInstance) {
+            try { await html5QrCodeInstance.stop(); html5QrCodeInstance.clear(); } catch(e) {}
+            html5QrCodeInstance = null;
         }
-      }).catch(err => {
-        console.error("Camera access error:", err);
-        alert("Camera access denied or not available.");
-        qrContainer.style.display = "none";
-      });
+
+        html5QrCodeInstance = new Html5Qrcode("qr-reader");
+
+        try {
+            const cameras = await Html5Qrcode.getCameras();
+            if (cameras && cameras.length) {
+                const cameraId = cameras[0].id; // use first available camera
+                html5QrCodeInstance.start(
+                    cameraId,
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    decodedText => {
+                        recipientInput.value = decodedText.trim();
+                        html5QrCodeInstance.stop().then(() => html5QrCodeInstance.clear());
+                        html5QrCodeInstance = null;
+                        qrContainer.style.display = "none";
+                    },
+                    errorMessage => { /* ignore scan errors */ }
+                ).catch(err => {
+                    console.error("QR start error:", err);
+                    qrContainer.style.display = "none";
+                });
+            } else {
+                alert("No camera found on this device.");
+                qrContainer.style.display = "none";
+            }
+        } catch(err) {
+            console.error("Camera access error:", err);
+            alert("Camera access denied or not available.");
+            qrContainer.style.display = "none";
+        }
     });
 
     closeScannerBtn.addEventListener("click", async () => {
-      if (html5QrCodeInstance) {
-        try {
-          await html5QrCodeInstance.stop();
-          html5QrCodeInstance.clear();
-          html5QrCodeInstance = null;
-        } catch(err) { console.error("Error closing scanner:", err); }
-      }
-      qrContainer.style.display = "none";
+        if (html5QrCodeInstance) {
+            try {
+                await html5QrCodeInstance.stop();
+                html5QrCodeInstance.clear();
+                html5QrCodeInstance = null;
+            } catch(err) { console.error("Error closing scanner:", err); }
+        }
+        qrContainer.style.display = "none";
     });
 
     const mobileToggle = document.getElementById('mobileMenuToggle');
     const menuLinks = document.getElementById('menuLinks');
 
     mobileToggle.addEventListener('click', () => {
-      menuLinks.classList.toggle('active');
+        menuLinks.classList.toggle('active');
     });
 
     // Initial price fetch
     fetchShisoPrice();
     setInterval(fetchShisoPrice, 60000);
-  </script>
+});
+</script>
+
 
 </body>
 </html>
