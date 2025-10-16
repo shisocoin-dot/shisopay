@@ -152,34 +152,62 @@
     }
   });
 
-// QR SCANNER LOGIC (Updated)
-scanBtn.addEventListener("click", () => {
+// ----------------------
+// QR SCANNER (FIXED)
+// ----------------------
+let html5QrCodeInstance = null;
+
+scanBtn.addEventListener("click", async () => {
+  // Show scanner container
   qrContainer.style.display = "block";
-  const html5QrCode = new Html5Qrcode("qr-reader");
 
-  html5QrCode.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
-    (decodedText) => {
-      recipientInput.value = decodedText.trim();
-      html5QrCode.stop().then(() => {
-        qrContainer.style.display = "none";
-      });
-    },
-    (errorMessage) => {
-      // Optional: handle scan errors silently
-    }
-  ).catch(err => {
-    console.error("Camera start failed:", err);
+  // Stop any previous instance (just in case)
+  if (html5QrCodeInstance) {
+    try { await html5QrCodeInstance.stop(); } catch (e) {}
+    html5QrCodeInstance = null;
+  }
+
+  // Create a new instance
+  html5QrCodeInstance = new Html5Qrcode("qr-reader");
+
+  try {
+    await html5QrCodeInstance.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        // Fill the scanned address
+        recipientInput.value = decodedText.trim();
+
+        // Stop and close the scanner automatically
+        html5QrCodeInstance.stop().then(() => {
+          qrContainer.style.display = "none";
+          html5QrCodeInstance = null;
+        }).catch(err => console.error("Stop error:", err));
+      },
+      (errorMessage) => {
+        // Ignore scan errors
+      }
+    );
+  } catch (err) {
+    console.error("Camera start error:", err);
     qrContainer.style.display = "none";
-  });
-
-  closeScannerBtn.addEventListener("click", () => {
-    html5QrCode.stop().then(() => {
-      qrContainer.style.display = "none";
-    });
-  });
+  }
 });
+
+// Manual Close Button
+closeScannerBtn.addEventListener("click", async () => {
+  if (html5QrCodeInstance) {
+    try {
+      await html5QrCodeInstance.stop();
+      html5QrCodeInstance.clear();
+      html5QrCodeInstance = null;
+    } catch (err) {
+      console.error("Error closing scanner:", err);
+    }
+  }
+  qrContainer.style.display = "none";
+});
+
 
   // Initial price fetch
   fetchShisoPrice();
