@@ -39,11 +39,11 @@
       <button id="scanQRBtn" class="btn" style="padding:8px 12px;">📷 Scan</button>
     </div>
 
-    <!-- QR Scanner Area (hidden until user clicks Scan) -->
-    <div id="qr-scanner-container" style="display:none;margin-top:10px;text-align:center;">
-      <video id="qr-video" width="100%" style="border:2px solid #2575fc;border-radius:10px;"></video>
-      <button id="closeScannerBtn" class="btn" style="margin-top:8px;">Close Scanner</button>
-    </div>
+<!-- QR Scanner Area (hidden until user clicks Scan) -->
+<div id="qr-scanner-container" style="display:none;margin-top:10px;text-align:center;">
+  <div id="qr-reader" style="width:100%;"></div>
+  <button id="closeScannerBtn" class="btn" style="margin-top:8px;">Close Scanner</button>
+</div>
 
     <label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
     <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
@@ -152,35 +152,34 @@
     }
   });
 
-  // QR SCANNER LOGIC
-  scanBtn.addEventListener("click", () => {
-    qrContainer.style.display = "block";
-    html5QrCode = new Html5Qrcode("qr-video");
+// QR SCANNER LOGIC (Updated)
+scanBtn.addEventListener("click", () => {
+  qrContainer.style.display = "block";
+  const html5QrCode = new Html5Qrcode("qr-reader");
 
-    Html5Qrcode.getCameras().then(cameras => {
-      if (cameras && cameras.length) {
-        html5QrCode.start(
-          cameras[0].id,
-          { fps: 10, qrbox: 250 },
-          qrCodeMessage => {
-            recipientInput.value = qrCodeMessage;
-            stopScanner();
-          },
-          errorMessage => {}
-        );
-      }
-    }).catch(err => console.error("Camera error:", err));
-  });
-
-  function stopScanner() {
-    if (html5QrCode) {
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (decodedText) => {
+      recipientInput.value = decodedText.trim();
       html5QrCode.stop().then(() => {
         qrContainer.style.display = "none";
-      }).catch(err => console.error("Stop error:", err));
+      });
+    },
+    (errorMessage) => {
+      // Optional: handle scan errors silently
     }
-  }
+  ).catch(err => {
+    console.error("Camera start failed:", err);
+    qrContainer.style.display = "none";
+  });
 
-  closeScannerBtn.addEventListener("click", stopScanner);
+  closeScannerBtn.addEventListener("click", () => {
+    html5QrCode.stop().then(() => {
+      qrContainer.style.display = "none";
+    });
+  });
+});
 
   // Initial price fetch
   fetchShisoPrice();
