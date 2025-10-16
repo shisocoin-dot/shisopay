@@ -183,6 +183,12 @@ footer {
   background: #000; /* fallback if camera doesn't load */
 }
 
+#qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
 #closeScannerBtn {
   margin-top: 15px;
   background: #2575fc;
@@ -260,4 +266,3 @@ footer {
     height: 380px;
   }
 }
-
