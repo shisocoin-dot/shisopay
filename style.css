@@ -167,15 +167,20 @@ footer {
   padding: 20px;
   width: 90%;
   max-width: 400px;
+  height: 420px; /* fixed height for camera feed */
   box-shadow: 0 8px 25px rgba(0,0,0,0.25);
   animation: fadeIn 0.3s ease;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #qr-reader {
   width: 100%;
+  height: 100%; /* ensure camera feed fills container */
   border-radius: 12px;
-  margin-top: 15px;
+  background: #000; /* fallback if camera doesn't load */
 }
 
 #closeScannerBtn {
@@ -206,17 +211,23 @@ footer {
     padding: 30px 15px;
   }
 
+  /* Mobile Navigation Dropdown */
   nav.menu {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  /* Show toggle button */
   .menu-toggle {
     display: block;
+    background: #2575fc;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 10px;
+    font-weight: bold;
   }
 
-  /* Hide links by default */
   .menu-links {
     display: none;
     flex-direction: column;
@@ -228,7 +239,9 @@ footer {
     padding: 8px 15px;
     width: 100%;
     background: #333;
+    color: white;
     border-radius: 5px;
+    font-weight: bold;
   }
 
   .menu-links a:hover {
@@ -236,13 +249,15 @@ footer {
     color: white;
   }
 
-  /* Show links when active */
   .menu-links.active {
     display: flex;
   }
 
+  /* QR Scanner Box adjustments for mobile */
   #qr-scanner-box {
     width: 95%;
     padding: 15px;
+    height: 380px;
   }
 }
+
