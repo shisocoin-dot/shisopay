@@ -59,7 +59,7 @@ header p {
 /* ---------- Navigation Menu ---------- */
 nav.menu {
   background: #222;
-  padding: 15px;
+  padding: 15px 20px;
   position: sticky;
   top: 0;
   z-index: 999;
@@ -69,15 +69,33 @@ nav.menu {
   flex-wrap: wrap;
 }
 
-nav.menu a {
+/* Desktop links container */
+.menu-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.menu-links a {
   color: white;
   margin: 0 10px;
   font-weight: bold;
   transition: 0.3s;
 }
 
-nav.menu a:hover {
+.menu-links a:hover {
   color: #2575fc;
+}
+
+/* Mobile menu toggle button */
+.menu-toggle {
+  display: none;
+  color: white;
+  font-size: 1.2em;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 10px;
 }
 
 /* ---------- Sections ---------- */
@@ -190,10 +208,37 @@ footer {
 
   nav.menu {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  nav.menu a {
-    margin: 10px 0;
+  /* Show toggle button */
+  .menu-toggle {
+    display: block;
+  }
+
+  /* Hide links by default */
+  .menu-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .menu-links a {
+    margin: 8px 0;
+    padding: 8px 15px;
+    width: 100%;
+    background: #333;
+    border-radius: 5px;
+  }
+
+  .menu-links a:hover {
+    background: #2575fc;
+    color: white;
+  }
+
+  /* Show links when active */
+  .menu-links.active {
+    display: flex;
   }
 
   #qr-scanner-box {
