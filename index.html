@@ -17,20 +17,18 @@
     <a class="btn" href="#about">Learn More</a>
   </header>
 
-<!-- Navigation -->
-<nav class="menu">
-  <div class="menu-toggle" id="mobileMenuToggle">
-    ☰ Menu
-  </div>
-  <div class="menu-links" id="menuLinks">
-    <a href="#about">About</a>
-    <a href="#features">Features</a>
-    <a href="#howto">How it Works</a>
-    <a href="#shisopay-demo">ShisoPay Demo</a>
-    <a href="#contact">Contact</a>
-    <a href="#community">Community</a>
-  </div>
-</nav>
+  <!-- Navigation -->
+  <nav class="menu">
+    <div class="menu-toggle" id="mobileMenuToggle">☰ Menu</div>
+    <div class="menu-links" id="menuLinks">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#howto">How it Works</a>
+      <a href="#shisopay-demo">ShisoPay Demo</a>
+      <a href="#contact">Contact</a>
+      <a href="#community">Community</a>
+    </div>
+  </nav>
 
   <!-- ShisoPay Demo Section -->
   <section id="shisopay-demo">
@@ -44,27 +42,27 @@
         <button id="scanQRBtn" class="btn" style="padding:8px 12px;">📷 Scan</button>
       </div>
 
-<!-- QR Scanner Area (hidden until user clicks Scan) -->
-<div id="qr-scanner-container">
-  <div id="qr-scanner-box">
-    <div id="qr-reader"></div>
-    <button id="closeScannerBtn" class="btn">Close Scanner</button>
-  </div>
-</div>
+      <!-- QR Scanner Area -->
+      <div id="qr-scanner-container">
+        <div id="qr-scanner-box">
+          <div id="qr-reader"></div>
+          <button id="closeScannerBtn" class="btn">Close Scanner</button>
+        </div>
+      </div>
 
-<label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
-<input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
+      <label for="usdAmount" style="margin-top:12px;display:block;">Product Price (USD):</label>
+      <input type="number" id="usdAmount" placeholder="e.g., 10" value="10" style="width:100%;padding:8px;margin-bottom:10px;">
 
-<p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
-<p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
+      <p>Current SHISO Price: $<span id="shisoPrice">0</span></p>
+      <p>Amount to Send: <span id="shisoAmount">0</span> SHISO</p>
 
-<button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
-<button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
+      <button id="connectWalletBtn" class="btn" style="width:100%;">Connect Wallet</button>
+      <button id="sendBtn" class="btn" style="width:100%;margin-top:10px;" disabled>Send SHISO</button>
 
-<p id="status" style="margin-top:10px;color:#2575fc;"></p>
-</div>
-<a class="back-btn" href="#top">⬆ Back to Menu</a>
- </section>
+      <p id="status" style="margin-top:10px;color:#2575fc;"></p>
+    </div>
+    <a class="back-btn" href="#top">⬆ Back to Menu</a>
+  </section>
 
   <!-- Footer -->
   <footer>
@@ -91,7 +89,6 @@
     let shisoPrice = 0;
     let html5QrCodeInstance = null;
 
-    // ✅ Replace with your actual deployed SHISO token address
     const shisoTokenAddress = "0xYourTestnetSHISOToken"; 
     const shisoAbi = ["function transfer(address to, uint amount) public returns (bool)"];
 
@@ -161,9 +158,8 @@
     // QR SCANNER LOGIC
     // ----------------------
     scanBtn.addEventListener("click", async () => {
-      qrContainer.style.display = "block";
+      qrContainer.style.display = "flex";
 
-      // Stop previous instance if exists
       if (html5QrCodeInstance) {
         try { await html5QrCodeInstance.stop(); html5QrCodeInstance.clear(); } catch(e) {}
         html5QrCodeInstance = null;
@@ -171,28 +167,33 @@
 
       html5QrCodeInstance = new Html5Qrcode("qr-reader");
 
-      try {
-        await html5QrCodeInstance.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          async (decodedText) => {
-            recipientInput.value = decodedText.trim();
-
-            // Stop and clear scanner
-            try {
-              await html5QrCodeInstance.stop();
-              html5QrCodeInstance.clear();
-            } catch(err) { console.error("Stop error:", err); }
-
-            html5QrCodeInstance = null;
+      // Try accessing environment camera first
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          const cameraId = cameras[0].id; // use back camera
+          html5QrCodeInstance.start(
+            cameraId,
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            decodedText => {
+              recipientInput.value = decodedText.trim();
+              html5QrCodeInstance.stop().then(() => html5QrCodeInstance.clear());
+              html5QrCodeInstance = null;
+              qrContainer.style.display = "none";
+            },
+            errorMessage => { /* ignore scan errors */ }
+          ).catch(err => {
+            console.error("QR start error:", err);
             qrContainer.style.display = "none";
-          },
-          (errorMessage) => { /* ignore scan errors */ }
-        );
-      } catch(err) {
-        console.error("Camera start failed:", err);
+          });
+        } else {
+          alert("No camera found on this device.");
+          qrContainer.style.display = "none";
+        }
+      }).catch(err => {
+        console.error("Camera access error:", err);
+        alert("Camera access denied or not available.");
         qrContainer.style.display = "none";
-      }
+      });
     });
 
     closeScannerBtn.addEventListener("click", async () => {
@@ -206,12 +207,12 @@
       qrContainer.style.display = "none";
     });
 
-  const mobileToggle = document.getElementById('mobileMenuToggle');
-  const menuLinks = document.getElementById('menuLinks');
+    const mobileToggle = document.getElementById('mobileMenuToggle');
+    const menuLinks = document.getElementById('menuLinks');
 
-  mobileToggle.addEventListener('click', () => {
-    menuLinks.classList.toggle('active');
-  });
+    mobileToggle.addEventListener('click', () => {
+      menuLinks.classList.toggle('active');
+    });
 
     // Initial price fetch
     fetchShisoPrice();
