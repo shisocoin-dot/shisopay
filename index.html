@@ -17,15 +17,20 @@
     <a class="btn" href="#about">Learn More</a>
   </header>
 
-  <!-- Navigation -->
-  <nav class="menu">
+<!-- Navigation -->
+<nav class="menu">
+  <div class="menu-toggle" id="mobileMenuToggle">
+    ☰ Menu
+  </div>
+  <div class="menu-links" id="menuLinks">
     <a href="#about">About</a>
     <a href="#features">Features</a>
     <a href="#howto">How it Works</a>
     <a href="#shisopay-demo">ShisoPay Demo</a>
     <a href="#contact">Contact</a>
     <a href="#community">Community</a>
-  </nav>
+  </div>
+</nav>
 
   <!-- ShisoPay Demo Section -->
   <section id="shisopay-demo">
@@ -200,6 +205,13 @@
       }
       qrContainer.style.display = "none";
     });
+
+  const mobileToggle = document.getElementById('mobileMenuToggle');
+  const menuLinks = document.getElementById('menuLinks');
+
+  mobileToggle.addEventListener('click', () => {
+    menuLinks.classList.toggle('active');
+  });
 
     // Initial price fetch
     fetchShisoPrice();
